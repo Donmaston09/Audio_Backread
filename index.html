@@ -225,7 +225,7 @@
         </div>
       </div>
 
-      <p class="hint">Tip: on a phone, use the lock-screen / headphone media controls to play, pause and skip — the OS keeps audio going even while the screen is off. On desktop this can keep reading in a background tab.</p>
+      <p class="hint">Tip: on a phone, use the lock-screen / headphone media controls to play, pause and skip — the OS keeps audio going even while the screen is off.</p>
       <p class="hint" id="voiceQualityHint"></p>
     </div>
   </div>
@@ -624,7 +624,23 @@
     const frac = chap && chap.sentences.length ? curSentence / chap.sentences.length : 0;
     drawDial(frac);
     renderChapterList();
-    updateMediaSession();
+  }
+
+  function updateMediaSession(){
+    if(!('mediaSession' in navigator) || !book) return;
+    const chap = book.chapters[curChapter];
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: chap ? chap.title : '',
+      artist: book.title,
+      album: 'Backread'
+    });
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    navigator.mediaSession.setActionHandler('play', play);
+    navigator.mediaSession.setActionHandler('pause', pause);
+    navigator.mediaSession.setActionHandler('previoustrack', () => advanceChapter(-1, true));
+    navigator.mediaSession.setActionHandler('nexttrack', () => advanceChapter(1, true));
+    navigator.mediaSession.setActionHandler('seekbackward', () => stepSentence(-1, true));
+    navigator.mediaSession.setActionHandler('seekforward', () => stepSentence(1, true));
   }
 
   // ---------- TTS Player ----------
@@ -633,13 +649,6 @@
     try{ if('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
   }
   function releaseWake(){ try{ wakeLock && wakeLock.release(); wakeLock=null; }catch(e){} }
-
-  // Chrome speechSynthesis pause bug workaround
-  setInterval(() => {
-    if(speechSynthesis.speaking && !speechSynthesis.paused){
-      speechSynthesis.pause(); speechSynthesis.resume();
-    }
-  }, 9000);
 
   function currentSentenceText(){
     const chap = book.chapters[curChapter];
@@ -662,6 +671,7 @@
     utt.onerror = () => { if(isPlaying) stepSentence(1, true); };
     speechSynthesis.speak(utt);
     updateNowPlaying();
+    updateMediaSession();
     saveState();
   }
 
@@ -718,24 +728,6 @@
     curChapter = i; curSentence = 0;
     if(isPlaying) speakCurrent(); else updateNowPlaying();
     saveState();
-  }
-
-  // ---------- Media Session (lock-screen controls) ----------
-  function updateMediaSession(){
-    if(!('mediaSession' in navigator) || !book) return;
-    const chap = book.chapters[curChapter];
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: chap ? chap.title : '',
-      artist: book.title,
-      album: 'Backread'
-    });
-    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-    navigator.mediaSession.setActionHandler('play', play);
-    navigator.mediaSession.setActionHandler('pause', pause);
-    navigator.mediaSession.setActionHandler('previoustrack', () => advanceChapter(-1, true));
-    navigator.mediaSession.setActionHandler('nexttrack', () => advanceChapter(1, true));
-    navigator.mediaSession.setActionHandler('seekbackward', () => stepSentence(-1, true));
-    navigator.mediaSession.setActionHandler('seekforward', () => stepSentence(1, true));
   }
 
   // ---------- Voices ----------
