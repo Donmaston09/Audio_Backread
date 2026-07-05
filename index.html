@@ -225,7 +225,7 @@
         </div>
       </div>
 
-      <p class="hint">Tip: on a phone, use the lock-screen / headphone media controls to play, pause and skip — the OS keeps audio going even while the screen is off.</p>
+      <p class="hint" id="wakeHint">Tip: keep this page open while listening. On iPhone, browser speech may pause if the phone is manually locked.</p>
       <p class="hint" id="voiceQualityHint"></p>
     </div>
   </div>
@@ -631,10 +631,42 @@
 
   // ---------- TTS Player ----------
   let wakeLock = null;
-  async function requestWake(){
-    try{ if('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
+  let wakeLockWanted = false;
+  function updateWakeHint(message){
+    const hint = el('wakeHint');
+    if(hint) hint.textContent = message;
   }
-  function releaseWake(){ try{ wakeLock && wakeLock.release(); wakeLock=null; }catch(e){} }
+  async function requestWake(){
+    wakeLockWanted = true;
+    if(!('wakeLock' in navigator)){
+      updateWakeHint('Keep this page open while listening. This browser cannot prevent iPhone auto-lock, and speech may pause when the screen turns off.');
+      return;
+    }
+    try{
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => {
+        wakeLock = null;
+        if(isPlaying && document.visibilityState === 'visible'){
+          updateWakeHint('Screen wake lock was released by the device. Tap Play again if audio stops.');
+        }
+      });
+      updateWakeHint('Screen wake lock is active while this page stays open. Manually locking the iPhone can still stop browser speech.');
+    }catch(e){
+      updateWakeHint('Could not keep the screen awake. Leave this page open, or increase Auto-Lock while listening.');
+    }
+  }
+  function releaseWake(){
+    wakeLockWanted = false;
+    try{ wakeLock && wakeLock.release(); }catch(e){}
+    wakeLock=null;
+    updateWakeHint('Tip: keep this page open while listening. On iPhone, browser speech may pause if the phone is manually locked.');
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible' && isPlaying && wakeLockWanted && !wakeLock){
+      requestWake();
+    }
+  });
 
   function currentSentenceText(){
     const chap = book.chapters[curChapter];
