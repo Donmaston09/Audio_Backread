@@ -643,14 +643,41 @@
  
   let speakSeq = 0;
   function speakCurrent(){
-    const mySeq = ++speakSeq;
+    // 1. IMPORTANT: Always cancel pending or current speech on iOS before starting
+    speechSynthesis.cancel();
+    
     utteranceInProgress = true;
     const text = currentSentenceText();
+    
     if(text == null){
       utteranceInProgress = false;
       advanceChapter(1, true);
       return;
     }
+    
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = parseFloat(rateSlider.value);
+    const chosen = voices.find(v => v.name === voiceSelect.value);
+    if(chosen) utt.voice = chosen;
+    
+    // 2. Add an onend guard to ensure we only step forward if this specific 
+    // utterance was the one that finished.
+    utt.onend = () => {
+      if (!utteranceInProgress) return; 
+      utteranceInProgress = false;
+      if(isPlaying) stepSentence(1, true);
+    };
+    
+    // 3. Handle errors so the player doesn't get stuck
+    utt.onerror = () => {
+      utteranceInProgress = false;
+      if(isPlaying) stepSentence(1, true);
+    };
+    
+    speechSynthesis.speak(utt);
+    updateNowPlaying();
+    saveState();
+  }
  
     const startSpeaking = () => {
       if(mySeq !== speakSeq) return; // a newer call already superseded this one
