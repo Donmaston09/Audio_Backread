@@ -245,6 +245,7 @@
   let isPlaying = false;
   let voices = [];
   let bookKey = null;
+  let utteranceInProgress = false; // Prevent double-advance on utterance end
 
   const el = id => document.getElementById(id);
   const statusEl = el('status');
@@ -642,8 +643,10 @@
 
   function speakCurrent(){
     speechSynthesis.cancel();
+    utteranceInProgress = true;
     const text = currentSentenceText();
     if(text == null){
+      utteranceInProgress = false;
       advanceChapter(1, true);
       return;
     }
@@ -651,8 +654,14 @@
     utt.rate = parseFloat(rateSlider.value);
     const chosen = voices.find(v => v.name === voiceSelect.value);
     if(chosen) utt.voice = chosen;
-    utt.onend = () => { if(isPlaying) stepSentence(1, true); };
-    utt.onerror = () => { if(isPlaying) stepSentence(1, true); };
+    utt.onend = () => {
+      utteranceInProgress = false;
+      if(isPlaying) stepSentence(1, true);
+    };
+    utt.onerror = () => {
+      utteranceInProgress = false;
+      if(isPlaying) stepSentence(1, true);
+    };
     speechSynthesis.speak(utt);
     updateNowPlaying();
     saveState();
@@ -671,6 +680,7 @@
     isPlaying = false;
     el('playBtn').textContent = '▶';
     speechSynthesis.cancel();
+    utteranceInProgress = false;
     releaseWake();
   }
   function togglePlay(){ isPlaying ? pause() : play(); }
@@ -719,10 +729,18 @@
     // Register handlers ONLY ONCE at startup
     navigator.mediaSession.setActionHandler('play', play);
     navigator.mediaSession.setActionHandler('pause', pause);
-    navigator.mediaSession.setActionHandler('previoustrack', () => advanceChapter(-1, true));
-    navigator.mediaSession.setActionHandler('nexttrack', () => advanceChapter(1, true));
-    navigator.mediaSession.setActionHandler('seekbackward', () => stepSentence(-1, true));
-    navigator.mediaSession.setActionHandler('seekforward', () => stepSentence(1, true));
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      if(!utteranceInProgress) advanceChapter(-1, true);
+    });
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      if(!utteranceInProgress) advanceChapter(1, true);
+    });
+    navigator.mediaSession.setActionHandler('seekbackward', () => {
+      if(!utteranceInProgress) stepSentence(-1, true);
+    });
+    navigator.mediaSession.setActionHandler('seekforward', () => {
+      if(!utteranceInProgress) stepSentence(1, true);
+    });
   }
 
   function updateMediaSessionMetadata(){
