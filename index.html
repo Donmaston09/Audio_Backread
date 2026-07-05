@@ -43,7 +43,7 @@
     color:var(--paper);
   }
   header.top .tag{color:var(--muted);font-size:13px;font-family:'IBM Plex Mono',monospace;}
- 
+
   /* Uploader */
   .uploader{
     border:1.5px dashed var(--hairline);
@@ -70,16 +70,16 @@
   }
   .pick-btn:hover{background:var(--brass-bright);}
   .formats{margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.03em;}
- 
+
   .status{margin-top:14px;font-size:13px;color:var(--teal);font-family:'IBM Plex Mono',monospace;min-height:18px;}
   .status.err{color:var(--danger);}
- 
+
   /* Workspace */
   .workspace{display:grid;grid-template-columns:260px 1fr;gap:18px;margin-top:24px;}
   @media (max-width:720px){ .workspace{grid-template-columns:1fr;} }
- 
+
   .card{background:var(--panel);border:1px solid var(--hairline);border-radius:var(--radius);}
- 
+
   .chapters{padding:16px;max-height:640px;overflow-y:auto;}
   .chapters .book-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin:0 0 2px;}
   .chapters .book-meta{color:var(--muted);font-size:12px;margin:0 0 14px;font-family:'IBM Plex Mono',monospace;}
@@ -100,9 +100,9 @@
   .chapters li .n{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px;flex-shrink:0;}
   .chapters li.active .n{color:#1A1206cc;}
   .chapters li.skipped{opacity:.4;text-decoration:line-through;}
- 
+
   .player{padding:22px;display:flex;flex-direction:column;align-items:center;gap:18px;}
- 
+
   /* Dial */
   .dial-wrap{width:200px;height:200px;position:relative;}
   .dial-wrap svg{width:100%;height:100%;}
@@ -112,11 +112,11 @@
   }
   .dial-center .pct{font-family:'IBM Plex Mono',monospace;font-size:22px;color:var(--brass-bright);}
   .dial-center .lbl{font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
- 
+
   .now-playing{text-align:center;max-width:440px;}
   .now-playing .chap{font-family:'Fraunces',serif;font-weight:600;font-size:17px;margin:0 0 4px;}
   .now-playing .sent{color:var(--muted);font-size:13px;line-height:1.5;min-height:38px;}
- 
+
   .transport{display:flex;align-items:center;gap:14px;}
   .transport button{
     background:var(--panel-2);
@@ -138,7 +138,7 @@
   }
   .transport button.play:hover{background:var(--brass-bright);}
   .transport button:disabled{opacity:.35;cursor:default;}
- 
+
   .controls-row{width:100%;max-width:460px;display:flex;flex-direction:column;gap:12px;margin-top:4px;}
   .ctrl{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;}
   .ctrl label{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.03em;text-transform:uppercase;}
@@ -150,7 +150,7 @@
   .toggle-row{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;font-size:12.5px;color:var(--muted);}
   .toggle-row label{display:flex;align-items:center;gap:6px;cursor:pointer;}
   .toggle-row input{accent-color:var(--teal);}
- 
+
   .hint{font-size:11px;color:var(--muted);text-align:center;max-width:420px;line-height:1.5;margin-top:4px;}
   a.reset{color:var(--muted);font-size:12px;text-decoration:underline;cursor:pointer;}
 </style>
@@ -161,7 +161,7 @@
     <h1>Backread</h1>
     <span class="tag">read it to me while I work</span>
   </header>
- 
+
   <div class="uploader card" id="uploader">
     <h2>Drop a book in</h2>
     <p>PDF, EPUB, Word (.docx), or plain text.<br>It'll be split into chapters, cleaned up, and read aloud on command.</p>
@@ -170,7 +170,7 @@
     <div class="formats">PDF · EPUB · DOCX · TXT — processed entirely in your browser, nothing is uploaded anywhere</div>
     <div class="status" id="status"></div>
   </div>
- 
+
   <div class="workspace" id="workspace" hidden>
     <div class="chapters card">
       <p class="book-title" id="bookTitle">—</p>
@@ -178,7 +178,7 @@
       <ul id="chapterList"></ul>
       <div style="margin-top:12px;"><a class="reset" id="resetBtn">Load a different book</a></div>
     </div>
- 
+
     <div class="player card">
       <div class="dial-wrap">
         <svg viewBox="0 0 200 200" id="dialSvg"></svg>
@@ -187,12 +187,12 @@
           <div class="lbl">in chapter</div>
         </div>
       </div>
- 
+
       <div class="now-playing">
         <p class="chap" id="npChapter">Pick a chapter to begin</p>
         <p class="sent" id="npSentence"></p>
       </div>
- 
+
       <div class="transport">
         <button id="prevChapBtn" title="Previous chapter">⏮</button>
         <button id="backBtn" title="Back one sentence">◀</button>
@@ -200,7 +200,7 @@
         <button id="fwdBtn" title="Forward one sentence">▶▶</button>
         <button id="nextChapBtn" title="Next chapter">⏭</button>
       </div>
- 
+
       <div class="controls-row">
         <div class="ctrl">
           <label>Speed</label>
@@ -224,21 +224,21 @@
           <label><input type="checkbox" id="skipFront" checked> Skip front matter</label>
         </div>
       </div>
- 
+
       <p class="hint">Tip: on a phone, use the lock-screen / headphone media controls to play, pause and skip — the OS keeps audio going even while the screen is off.</p>
       <p class="hint" id="voiceQualityHint"></p>
     </div>
   </div>
- 
+
   <footer style="text-align:center;margin-top:30px;color:var(--muted);font-size:11.5px;font-family:'IBM Plex Mono',monospace;">
     Built by Tony Onoja, Ph.D. — School of Health Sciences, University of Surrey
   </footer>
 </div>
- 
+
 <script>
 (function(){
   "use strict";
- 
+
   // ---------- State ----------
   let book = null; // {title, chapters:[{title, sentences:[...], skip:false}]}
   let curChapter = 0, curSentence = 0;
@@ -246,15 +246,16 @@
   let voices = [];
   let bookKey = null;
   let utteranceInProgress = false; // Prevent double-advance on utterance end
- 
+  let activeSpeechId = 0; // Ignore stale/duplicate iOS speech callbacks
+
   const el = id => document.getElementById(id);
   const statusEl = el('status');
- 
+
   function setStatus(msg, isErr){
     statusEl.textContent = msg || '';
     statusEl.className = 'status' + (isErr ? ' err' : '');
   }
- 
+
   // ---------- Storage helpers (best-effort, non-fatal) ----------
   async function saveState(){
     try{
@@ -289,7 +290,7 @@
     }catch(e){}
     return null;
   }
- 
+
   // ---------- Text utilities ----------
   function splitSentences(text){
     // Normalize whitespace first
@@ -316,10 +317,10 @@
     }
     return out.filter(s => s.length > 0);
   }
- 
+
   const BOILERPLATE_HEADINGS = /^(references|bibliography|notes|endnotes|footnotes|acknowledg(e)?ments|index|about the author|colophon|further reading)\s*$/i;
   const FRONTMATTER_TITLES = /^(cover|title page|copyright|dedication|table of contents|contents|half title|also by|praise for|epigraph)\s*$/i;
- 
+
   function stripBoilerplateSection(text){
     // If a "References"/"Notes"/etc heading appears, cut everything from there to the end of the chapter.
     const lines = text.split('\n');
@@ -331,7 +332,7 @@
     if(cutAt >= 0) return lines.slice(0, cutAt).join('\n');
     return text;
   }
- 
+
   function stripPageNumberLines(text){
     return text.split('\n').filter(line => {
       const t = line.trim();
@@ -341,7 +342,7 @@
       return true;
     }).join('\n');
   }
- 
+
   function removeRepeatedLines(pagesLines){
     // pagesLines: array of arrays of strings (lines per page). Removes lines that
     // repeat verbatim across a large fraction of pages (running headers/footers).
@@ -357,7 +358,7 @@
     }
     return pagesLines.map(lines => lines.filter(l => !boiler.has(l.trim())));
   }
- 
+
   // ---------- Parsers ----------
   async function parseFile(file){
     const name = file.name.toLowerCase();
@@ -367,13 +368,13 @@
     if(name.endsWith('.txt')) return parseTxt(file);
     throw new Error('Unsupported file type');
   }
- 
+
   async function parseTxt(file){
     const text = await file.text();
     const title = file.name.replace(/\.txt$/i,'');
     return chapterizePlainText(title, text);
   }
- 
+
   function chapterizePlainText(title, text){
     const lines = text.split('\n');
     const heading = /^\s*(chapter|part|book)\s+([0-9]+|[ivxlcdm]+)\b.*$/i;
@@ -400,7 +401,7 @@
     }
     return { title, chapters };
   }
- 
+
   async function parseDocx(file){
     const buf = await file.arrayBuffer();
     const result = await mammoth.convertToHtml({ arrayBuffer: buf }, {
@@ -425,7 +426,7 @@
     }
     return { title: file.name.replace(/\.docx$/i,''), chapters };
   }
- 
+
   async function parseEpub(file){
     const buf = await file.arrayBuffer();
     const zip = await JSZip.loadAsync(buf);
@@ -435,9 +436,9 @@
     const opfDir = opfPath.includes('/') ? opfPath.slice(0, opfPath.lastIndexOf('/')+1) : '';
     const opfText = await zip.file(opfPath).async('text');
     const opfDoc = new DOMParser().parseFromString(opfText, 'application/xml');
- 
+
     const bookTitle = (opfDoc.querySelector('metadata > *[*|title], metadata title') || {}).textContent || file.name.replace(/\.epub$/i,'');
- 
+
     const manifest = {};
     opfDoc.querySelectorAll('manifest > item').forEach(item => {
       manifest[item.getAttribute('id')] = {
@@ -446,7 +447,7 @@
       };
     });
     const spineIds = Array.from(opfDoc.querySelectorAll('spine > itemref')).map(i => i.getAttribute('idref'));
- 
+
     // Try to build a title lookup from nav/toc
     const titleByHref = {};
     const navItem = Object.values(manifest).find(m => m.mediaType === 'application/xhtml+xml' && m.href.match(/nav/i));
@@ -469,7 +470,7 @@
         });
       }
     }catch(e){ /* toc parsing best-effort */ }
- 
+
     const chapters = [];
     for(const id of spineIds){
       const item = manifest[id];
@@ -489,14 +490,14 @@
     }
     return { title: bookTitle, chapters };
   }
- 
+
   async function parsePdf(file){
     const buf = await file.arrayBuffer();
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
     const pagesLines = []; // array of array-of-lines
     const pagesMeta = []; // per page: {lines:[{text,size}]}
- 
+
     for(let p=1; p<=pdf.numPages; p++){
       const page = await pdf.getPage(p);
       const content = await page.getTextContent();
@@ -514,7 +515,7 @@
       pagesMeta.push(rows);
       pagesLines.push(rows.map(r => r.text));
     }
- 
+
     const cleanedLines = removeRepeatedLines(pagesLines);
     // recompute rows with cleaned text but keep sizes aligned by index
     const avgSize = (() => {
@@ -522,7 +523,7 @@
       pagesMeta.forEach(rows => rows.forEach(r => { sum+=r.size; n++; }));
       return n ? sum/n : 10;
     })();
- 
+
     // Build full line stream with heading flags
     const stream = [];
     pagesMeta.forEach((rows, pIdx) => {
@@ -535,11 +536,11 @@
         stream.push({ text: t, heading: isHeading });
       });
     });
- 
+
     // find heading-based chapter breaks
     const breakIdx = [];
     stream.forEach((row,i) => { if(row.heading) breakIdx.push(i); });
- 
+
     const chapters = [];
     if(breakIdx.length >= 2){
       for(let i=0;i<breakIdx.length;i++){
@@ -560,7 +561,7 @@
     }
     return { title: file.name.replace(/\.pdf$/i,''), chapters };
   }
- 
+
   // ---------- Post-process chapters into sentence arrays ----------
   function finalizeChapters(raw){
     return raw.chapters.map((c, i) => {
@@ -576,7 +577,7 @@
       };
     }).filter(c => c.sentences.length > 0 || c.skip === false ? true : true);
   }
- 
+
   // ---------- Rendering ----------
   function renderChapterList(){
     el('bookTitle').textContent = book.title;
@@ -593,7 +594,7 @@
     });
   }
   function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
- 
+
   function drawDial(fraction){
     const svg = el('dialSvg');
     const R = 88, cx=100, cy=100;
@@ -617,7 +618,7 @@
     `;
     el('dialPct').textContent = Math.round(fraction*100)+'%';
   }
- 
+
   function updateNowPlaying(){
     const chap = book.chapters[curChapter];
     el('npChapter').textContent = chap ? chap.title : '—';
@@ -627,89 +628,58 @@
     renderChapterList();
     updateMediaSessionMetadata();
   }
- 
+
   // ---------- TTS Player ----------
   let wakeLock = null;
   async function requestWake(){
     try{ if('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
   }
   function releaseWake(){ try{ wakeLock && wakeLock.release(); wakeLock=null; }catch(e){} }
- 
+
   function currentSentenceText(){
     const chap = book.chapters[curChapter];
     if(!chap) return null;
     return chap.sentences[curSentence] || null;
   }
- 
-  let speakSeq = 0;
-  function speakCurrent(){
-    // 1. IMPORTANT: Always cancel pending or current speech on iOS before starting
+
+  function stopSpeech(){
+    activeSpeechId++;
     speechSynthesis.cancel();
-    
+    utteranceInProgress = false;
+  }
+
+  function speakCurrent(replaceExisting){
+    if(replaceExisting) stopSpeech();
+    const speechId = ++activeSpeechId;
+    let handled = false;
     utteranceInProgress = true;
     const text = currentSentenceText();
-    
     if(text == null){
       utteranceInProgress = false;
       advanceChapter(1, true);
       return;
     }
-    
     const utt = new SpeechSynthesisUtterance(text);
     utt.rate = parseFloat(rateSlider.value);
     const chosen = voices.find(v => v.name === voiceSelect.value);
     if(chosen) utt.voice = chosen;
-    
-    // 2. Add an onend guard to ensure we only step forward if this specific 
-    // utterance was the one that finished.
     utt.onend = () => {
-      if (!utteranceInProgress) return; 
+      if(handled || speechId !== activeSpeechId) return;
+      handled = true;
       utteranceInProgress = false;
-      if(isPlaying) stepSentence(1, true);
+      if(isPlaying) stepSentence(1, true, false);
     };
-    
-    // 3. Handle errors so the player doesn't get stuck
     utt.onerror = () => {
+      if(handled || speechId !== activeSpeechId) return;
+      handled = true;
       utteranceInProgress = false;
-      if(isPlaying) stepSentence(1, true);
+      if(isPlaying) stepSentence(1, true, false);
     };
-    
     speechSynthesis.speak(utt);
     updateNowPlaying();
     saveState();
   }
- 
-    const startSpeaking = () => {
-      if(mySeq !== speakSeq) return; // a newer call already superseded this one
-      const utt = new SpeechSynthesisUtterance(text);
-      utt.rate = parseFloat(rateSlider.value);
-      const chosen = voices.find(v => v.name === voiceSelect.value);
-      if(chosen) utt.voice = chosen;
-      utt.onend = () => {
-        if(mySeq !== speakSeq) return; // stale callback from a superseded utterance
-        utteranceInProgress = false;
-        if(isPlaying) stepSentence(1, true);
-      };
-      utt.onerror = () => {
-        if(mySeq !== speakSeq) return;
-        utteranceInProgress = false;
-        if(isPlaying) stepSentence(1, true);
-      };
-      speechSynthesis.speak(utt);
-    };
- 
-    // iOS WebKit (incl. Chrome-on-iOS, which is WebKit under the hood) can double-fire
-    // an utterance if speak() is called in the same tick as cancel(). A short gap avoids it.
-    if(speechSynthesis.speaking || speechSynthesis.pending){
-      speechSynthesis.cancel();
-      setTimeout(startSpeaking, 60);
-    } else {
-      startSpeaking();
-    }
-    updateNowPlaying();
-    saveState();
-  }
- 
+
   function play(){
     if(!book) return;
     // if current chapter is a skipped one, hop forward first
@@ -717,36 +687,34 @@
     isPlaying = true;
     el('playBtn').textContent = '❚❚';
     requestWake();
-    speakCurrent();
+    speakCurrent(true);
   }
   function pause(){
     isPlaying = false;
-    speakSeq++; // invalidate any pending delayed speak
     el('playBtn').textContent = '▶';
-    speechSynthesis.cancel();
-    utteranceInProgress = false;
+    stopSpeech();
     releaseWake();
   }
   function togglePlay(){ isPlaying ? pause() : play(); }
- 
-  function stepSentence(dir, autoContinue){
+
+  function stepSentence(dir, autoContinue, replaceExisting){
     const chap = book.chapters[curChapter];
     if(!chap) return;
     curSentence += dir;
     if(curSentence < 0){
-      advanceChapter(-1, autoContinue, true);
+      advanceChapter(-1, autoContinue, true, replaceExisting);
       return;
     }
     if(curSentence >= chap.sentences.length){
-      advanceChapter(1, autoContinue);
+      advanceChapter(1, autoContinue, false, replaceExisting);
       return;
     }
-    if(isPlaying && autoContinue) speakCurrent();
+    if(isPlaying && autoContinue) speakCurrent(replaceExisting !== false);
     else updateNowPlaying();
     saveState();
   }
- 
-  function advanceChapter(dir, autoContinue, toEnd){
+
+  function advanceChapter(dir, autoContinue, toEnd, replaceExisting){
     let idx = curChapter + dir;
     while(idx >= 0 && idx < book.chapters.length && book.chapters[idx].skip) idx += dir;
     if(idx < 0 || idx >= book.chapters.length){
@@ -755,18 +723,18 @@
     }
     curChapter = idx;
     curSentence = toEnd ? Math.max(0, book.chapters[idx].sentences.length-1) : 0;
-    if(isPlaying && autoContinue !== false) speakCurrent();
+    if(isPlaying && autoContinue !== false) speakCurrent(replaceExisting !== false);
     else updateNowPlaying();
     saveState();
   }
- 
+
   function jumpToChapter(i){
     if(book.chapters[i].skip) return;
     curChapter = i; curSentence = 0;
-    if(isPlaying) speakCurrent(); else updateNowPlaying();
+    if(isPlaying) speakCurrent(true); else updateNowPlaying();
     saveState();
   }
- 
+
   // ---------- Media Session (lock-screen controls) ----------
   function initMediaSession(){
     if(!('mediaSession' in navigator)) return;
@@ -786,7 +754,7 @@
       if(!utteranceInProgress) stepSentence(1, true);
     });
   }
- 
+
   function updateMediaSessionMetadata(){
     if(!('mediaSession' in navigator) || !book) return;
     const chap = book.chapters[curChapter];
@@ -797,11 +765,11 @@
     });
     navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
   }
- 
+
   // ---------- Voices ----------
   const MALE_NAME_HINT = /\b(david|mark|guy|george|ryan|daniel|oliver|arthur|fred|alex|james|paul|thomas|will|matthew|eric|brian|sean|nathan)\b/i;
   const FEMALE_NAME_HINT = /\b(zira|samantha|susan|hazel|libby|sonia|karen|victoria|amy|emma|kate|serena|fiona|moira|tessa|shelley|catherine|allison|ava|joanna|salli|kimberly|olivia|amelia)\b/i;
- 
+
   function classifyVoice(v){
     const lang = (v.lang||'').toLowerCase();
     const name = v.name||'';
@@ -809,26 +777,26 @@
     if(lang.startsWith('en-us') || /us english|united states/i.test(name)) accent = 'American';
     else if(lang.startsWith('en-gb') || /uk english|united kingdom|british/i.test(name)) accent = 'British';
     else if(lang.startsWith('en')) accent = 'Other English';
- 
+
     let gender = 'Unknown';
     if(/\bmale\b/i.test(name) && !/female/i.test(name)) gender = 'Male';
     else if(/\bfemale\b/i.test(name)) gender = 'Female';
     else if(MALE_NAME_HINT.test(name)) gender = 'Male';
     else if(FEMALE_NAME_HINT.test(name)) gender = 'Female';
- 
+
     // Prefer higher-quality "Natural"/"Online"/neural voices when available (mainly Edge)
     const quality = /natural|online|neural|premium|enhanced/i.test(name) ? 2 : 1;
     return { accent, gender, quality };
   }
- 
+
   let voiceMeta = []; // parallel array to `voices`, from classifyVoice
- 
+
   function populateVoices(){
     const all = speechSynthesis.getVoices();
     voices = all.filter(v => v.lang.toLowerCase().startsWith('en'));
     if(voices.length === 0) voices = all;
     voiceMeta = voices.map(classifyVoice);
- 
+
     // --- advanced full list ---
     const sel = el('voiceSelect');
     sel.innerHTML = '';
@@ -837,7 +805,7 @@
       o.value = v.name; o.textContent = v.name + ' (' + v.lang + ')';
       sel.appendChild(o);
     });
- 
+
     // --- accent select: only offer accents that actually exist on this device ---
     const accentOrder = ['American','British','Other English','Other'];
     const accentsPresent = accentOrder.filter(a => voiceMeta.some(m => m.accent === a));
@@ -849,9 +817,9 @@
     });
     if(accentsPresent.includes(prevAccent)) accentSel.value = prevAccent;
     else if(accentsPresent.includes('American')) accentSel.value = 'American';
- 
+
     populateGenderOptions();
- 
+
     if(window.__preferredVoiceName && voices.some(v=>v.name===window.__preferredVoiceName)){
       sel.value = window.__preferredVoiceName;
       syncSelectorsToVoice(window.__preferredVoiceName);
@@ -861,7 +829,7 @@
     updateVoiceQualityHint();
   }
   speechSynthesis.onvoiceschanged = populateVoices;
- 
+
   function populateGenderOptions(){
     const accent = el('accentSelect').value;
     const gendersPresent = ['Male','Female','Unknown'].filter(g =>
@@ -877,7 +845,7 @@
     });
     if(gendersPresent.includes(prevGender)) genderSel.value = prevGender;
   }
- 
+
   function bestVoiceFor(accent, gender){
     let candidates = voices.map((v,i)=>({v,m:voiceMeta[i],i})).filter(c => c.m.accent === accent);
     if(gender && gender !== 'Unknown'){
@@ -888,7 +856,7 @@
     candidates.sort((a,b) => b.m.quality - a.m.quality);
     return candidates[0] ? candidates[0].v : null;
   }
- 
+
   function applyBestVoiceForSelectors(){
     const accent = el('accentSelect').value;
     const gender = el('genderSelect').value;
@@ -898,7 +866,7 @@
       window.__preferredVoiceName = best.name;
     }
   }
- 
+
   function syncSelectorsToVoice(name){
     const idx = voices.findIndex(v => v.name === name);
     if(idx < 0) return;
@@ -907,14 +875,14 @@
     populateGenderOptions();
     if([...el('genderSelect').options].some(o=>o.value===m.gender)) el('genderSelect').value = m.gender;
   }
- 
+
   function updateVoiceQualityHint(){
     const anyNatural = voiceMeta.some(m => m.quality === 2);
     el('voiceQualityHint').textContent = anyNatural
       ? ''
       : 'For noticeably more natural-sounding voices on Windows, try opening this page in Microsoft Edge — it offers free "Natural"-quality voices the standard Windows voices don\u2019t.';
   }
- 
+
   el('accentSelect').addEventListener('change', () => {
     populateGenderOptions();
     applyBestVoiceForSelectors();
@@ -924,14 +892,14 @@
     applyBestVoiceForSelectors();
     saveState();
   });
- 
+
   // ---------- Wiring ----------
   const fileInput = el('fileInput');
   const uploader = el('uploader');
   const rateSlider = el('rateSlider'), rateVal = el('rateVal');
   const voiceSelect = el('voiceSelect');
   const skipRefs = el('skipRefs'), skipFront = el('skipFront');
- 
+
   ['dragenter','dragover'].forEach(ev => uploader.addEventListener(ev, e => { e.preventDefault(); uploader.classList.add('drag'); }));
   ['dragleave','drop'].forEach(ev => uploader.addEventListener(ev, e => { e.preventDefault(); uploader.classList.remove('drag'); }));
   uploader.addEventListener('drop', e => {
@@ -939,7 +907,7 @@
     if(f) loadFile(f);
   });
   fileInput.addEventListener('change', e => { if(e.target.files[0]) loadFile(e.target.files[0]); });
- 
+
   async function loadFile(file){
     pause();
     setStatus('Reading "'+file.name+'" …');
@@ -952,13 +920,13 @@
       // skip forward past any front-matter to first real chapter
       while(curChapter < book.chapters.length && book.chapters[curChapter].skip) curChapter++;
       if(curChapter >= book.chapters.length) curChapter = 0;
- 
+
       const savedPos = await loadPosition(bookKey);
       if(savedPos && book.chapters[savedPos.curChapter]){
         curChapter = savedPos.curChapter;
         curSentence = savedPos.curSentence || 0;
       }
- 
+
       el('workspace').hidden = false;
       setStatus('Loaded "'+book.title+'" — '+book.chapters.length+' chapters.');
       updateNowPlaying();
@@ -967,13 +935,13 @@
       setStatus('Could not read that file: '+err.message, true);
     }
   }
- 
+
   el('playBtn').addEventListener('click', togglePlay);
   el('backBtn').addEventListener('click', () => stepSentence(-1, isPlaying));
   el('fwdBtn').addEventListener('click', () => stepSentence(1, isPlaying));
   el('prevChapBtn').addEventListener('click', () => advanceChapter(-1, isPlaying));
   el('nextChapBtn').addEventListener('click', () => advanceChapter(1, isPlaying));
- 
+
   rateSlider.addEventListener('input', () => {
     rateVal.textContent = parseFloat(rateSlider.value).toFixed(2)+'×';
     saveState();
@@ -985,20 +953,20 @@
   });
   skipRefs.addEventListener('change', () => { if(book) rebuildCurrentBookFiltering(); saveState(); });
   skipFront.addEventListener('change', () => { if(book){ book.chapters.forEach(c=>{}); reapplyFrontMatterSkip(); } saveState(); });
- 
+
   function reapplyFrontMatterSkip(){
     book.chapters.forEach(c => {
       if(FRONTMATTER_TITLES.test(c.title.trim())) c.skip = skipFront.checked;
     });
     renderChapterList();
   }
- 
+
   function rebuildCurrentBookFiltering(){
     // Note: toggling "skip refs" after load only affects newly loaded books cleanly,
     // since original raw text isn't retained post-parse. Inform lightly via status.
     setStatus('Tip: the "skip references" toggle applies on next file load for best results.', false);
   }
- 
+
   el('resetBtn').addEventListener('click', () => {
     pause();
     book = null; bookKey = null;
@@ -1006,7 +974,7 @@
     fileInput.value = '';
     setStatus('');
   });
- 
+
   // init
   initMediaSession();
   loadPrefs().then(populateVoices);
@@ -1015,4 +983,3 @@
 </script>
 </body>
 </html>
-
