@@ -624,23 +624,7 @@
     const frac = chap && chap.sentences.length ? curSentence / chap.sentences.length : 0;
     drawDial(frac);
     renderChapterList();
-  }
-
-  function updateMediaSession(){
-    if(!('mediaSession' in navigator) || !book) return;
-    const chap = book.chapters[curChapter];
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: chap ? chap.title : '',
-      artist: book.title,
-      album: 'Backread'
-    });
-    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-    navigator.mediaSession.setActionHandler('play', play);
-    navigator.mediaSession.setActionHandler('pause', pause);
-    navigator.mediaSession.setActionHandler('previoustrack', () => advanceChapter(-1, true));
-    navigator.mediaSession.setActionHandler('nexttrack', () => advanceChapter(1, true));
-    navigator.mediaSession.setActionHandler('seekbackward', () => stepSentence(-1, true));
-    navigator.mediaSession.setActionHandler('seekforward', () => stepSentence(1, true));
+    updateMediaSessionMetadata();
   }
 
   // ---------- TTS Player ----------
@@ -671,7 +655,6 @@
     utt.onerror = () => { if(isPlaying) stepSentence(1, true); };
     speechSynthesis.speak(utt);
     updateNowPlaying();
-    updateMediaSession();
     saveState();
   }
 
@@ -728,6 +711,29 @@
     curChapter = i; curSentence = 0;
     if(isPlaying) speakCurrent(); else updateNowPlaying();
     saveState();
+  }
+
+  // ---------- Media Session (lock-screen controls) ----------
+  function initMediaSession(){
+    if(!('mediaSession' in navigator)) return;
+    // Register handlers ONLY ONCE at startup
+    navigator.mediaSession.setActionHandler('play', play);
+    navigator.mediaSession.setActionHandler('pause', pause);
+    navigator.mediaSession.setActionHandler('previoustrack', () => advanceChapter(-1, true));
+    navigator.mediaSession.setActionHandler('nexttrack', () => advanceChapter(1, true));
+    navigator.mediaSession.setActionHandler('seekbackward', () => stepSentence(-1, true));
+    navigator.mediaSession.setActionHandler('seekforward', () => stepSentence(1, true));
+  }
+
+  function updateMediaSessionMetadata(){
+    if(!('mediaSession' in navigator) || !book) return;
+    const chap = book.chapters[curChapter];
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: chap ? chap.title : '',
+      artist: book.title,
+      album: 'Backread'
+    });
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
   }
 
   // ---------- Voices ----------
@@ -944,6 +950,7 @@
   });
 
   // init
+  initMediaSession();
   loadPrefs().then(populateVoices);
   drawDial(0);
 })();
