@@ -9,6 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/nosleep.js@0.12.0/dist/NoSleep.min.js"></script>
 <style>
   :root{
     --ink:#15171A;
@@ -225,7 +226,7 @@
         </div>
       </div>
 
-      <p class="hint" id="wakeHint">Tip: keep this page open while listening. On iPhone, browser speech may pause if the phone is manually locked.</p>
+      <p class="hint" id="wakeHint">Tip: keep this page open while listening. Backread will try to stop the iPhone from auto-locking during playback.</p>
       <p class="hint" id="voiceQualityHint"></p>
     </div>
   </div>
@@ -632,14 +633,35 @@
   // ---------- TTS Player ----------
   let wakeLock = null;
   let wakeLockWanted = false;
+  let noSleep = null;
+  let noSleepActive = false;
   function updateWakeHint(message){
     const hint = el('wakeHint');
     if(hint) hint.textContent = message;
   }
+  function requestNoSleep(){
+    if(!window.NoSleep) return false;
+    try{
+      if(!noSleep) noSleep = new NoSleep();
+      noSleep.enable();
+      noSleepActive = true;
+      return true;
+    }catch(e){
+      noSleepActive = false;
+      return false;
+    }
+  }
+  function releaseNoSleep(){
+    try{ if(noSleepActive && noSleep) noSleep.disable(); }catch(e){}
+    noSleepActive = false;
+  }
   async function requestWake(){
     wakeLockWanted = true;
+    const fallbackActive = requestNoSleep();
     if(!('wakeLock' in navigator)){
-      updateWakeHint('Keep this page open while listening. This browser cannot prevent iPhone auto-lock, and speech may pause when the screen turns off.');
+      updateWakeHint(fallbackActive
+        ? 'Keep-awake mode is active. Leave this page visible; manually locking the iPhone can still stop speech.'
+        : 'Keep this page open while listening. Increase iPhone Auto-Lock if the screen still turns off.');
       return;
     }
     try{
@@ -650,16 +672,19 @@
           updateWakeHint('Screen wake lock was released by the device. Tap Play again if audio stops.');
         }
       });
-      updateWakeHint('Screen wake lock is active while this page stays open. Manually locking the iPhone can still stop browser speech.');
+      updateWakeHint('Keep-awake mode is active while this page stays open. Manually locking the iPhone can still stop speech.');
     }catch(e){
-      updateWakeHint('Could not keep the screen awake. Leave this page open, or increase Auto-Lock while listening.');
+      updateWakeHint(fallbackActive
+        ? 'Fallback keep-awake mode is active. Leave this page visible; manually locking the iPhone can still stop speech.'
+        : 'Could not keep the screen awake. Leave this page open, or increase Auto-Lock while listening.');
     }
   }
   function releaseWake(){
     wakeLockWanted = false;
     try{ wakeLock && wakeLock.release(); }catch(e){}
     wakeLock=null;
-    updateWakeHint('Tip: keep this page open while listening. On iPhone, browser speech may pause if the phone is manually locked.');
+    releaseNoSleep();
+    updateWakeHint('Tip: keep this page open while listening. Backread will try to stop the iPhone from auto-locking during playback.');
   }
 
   document.addEventListener('visibilitychange', () => {
