@@ -1,19 +1,7 @@
-const OPENAI_SPEECH_URL = 'https://api.openai.com/v1/audio/speech';
-const ALLOWED_VOICES = new Set([
-  'alloy',
-  'ash',
-  'ballad',
-  'coral',
-  'echo',
-  'fable',
-  'marin',
-  'nova',
-  'onyx',
-  'sage',
-  'shimmer',
-  'verse',
-  'cedar'
-]);
+const GROQ_SPEECH_URL = 'https://api.groq.com/openai/v1/audio/speech';
+const GROQ_MODEL = 'canopylabs/orpheus-v1-english';
+const MAX_GROQ_TTS_CHARS = 200;
+const ALLOWED_VOICES = new Set(['autumn', 'diana', 'hannah', 'austin', 'daniel', 'troy']);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,8 +20,8 @@ export default {
       return json({ error: 'Use POST /tts with { "text": "..." }.' }, 404);
     }
 
-    if (!env.OPENAI_API_KEY) {
-      return json({ error: 'OPENAI_API_KEY is not configured on this worker.' }, 500);
+    if (!env.GROQ_API_KEY) {
+      return json({ error: 'GROQ_API_KEY is not configured on this worker.' }, 500);
     }
 
     let body;
@@ -45,37 +33,36 @@ export default {
 
     const text = String(body.text || '').trim();
     if (!text) return json({ error: 'Missing text.' }, 400);
-    if (text.length > 1200) return json({ error: 'Text is too long for one speech chunk.' }, 400);
+    if (text.length > MAX_GROQ_TTS_CHARS) {
+      return json({ error: `Text is too long for one Groq speech chunk. Maximum is ${MAX_GROQ_TTS_CHARS} characters.` }, 400);
+    }
 
     const voice = normalizeVoice(body.voice);
-    const speed = clampSpeed(Number(body.rate || 1));
 
-    const speechResponse = await fetch(OPENAI_SPEECH_URL, {
+    const speechResponse = await fetch(GROQ_SPEECH_URL, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${env.GROQ_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini-tts',
+        model: GROQ_MODEL,
         voice,
         input: text,
-        speed,
-        response_format: 'mp3',
-        instructions: 'Read clearly in a calm audiobook style.'
+        response_format: 'wav'
       })
     });
 
     if (!speechResponse.ok) {
       const message = await speechResponse.text();
-      return json({ error: 'OpenAI speech request failed.', detail: message }, speechResponse.status);
+      return json({ error: 'Groq speech request failed.', detail: message }, speechResponse.status);
     }
 
     return new Response(speechResponse.body, {
       status: 200,
       headers: {
         ...corsHeaders,
-        'Content-Type': 'audio/mpeg',
+        'Content-Type': 'audio/wav',
         'Cache-Control': 'no-store'
       }
     });
@@ -87,12 +74,10 @@ function normalizeVoice(input) {
   for (const voice of ALLOWED_VOICES) {
     if (value.includes(voice)) return voice;
   }
-  return 'marin';
-}
-
-function clampSpeed(value) {
-  if (!Number.isFinite(value)) return 1;
-  return Math.min(2, Math.max(0.6, value));
+  if (/\b(male|david|mark|guy|george|ryan|oliver|arthur|alex|james|paul|thomas|will|matthew|eric|brian|sean|nathan)\b/i.test(value)) {
+    return 'daniel';
+  }
+  return 'hannah';
 }
 
 function json(data, status = 200) {

@@ -316,12 +316,13 @@
     for(let s of rough){
       s = s.trim();
       if(!s) continue;
-      // further split very long sentences so mobile TTS doesn't choke
-      if(s.length > 260){
+      // Further split long sentences. Groq Orpheus TTS currently accepts
+      // a maximum of 200 characters per speech request.
+      if(s.length > 180){
         const parts = s.split(/(?<=[,;:])\s+/);
         let buf = '';
         for(const p of parts){
-          if((buf+' '+p).length > 260 && buf){ out.push(buf.trim()); buf = p; }
+          if((buf+' '+p).length > 180 && buf){ out.push(buf.trim()); buf = p; }
           else buf = buf ? buf+' '+p : p;
         }
         if(buf) out.push(buf.trim());
