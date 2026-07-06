@@ -144,10 +144,12 @@
   .ctrl{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;}
   .ctrl label{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.03em;text-transform:uppercase;}
   .ctrl select, .ctrl input[type=range]{accent-color:var(--brass);}
-  .ctrl select{
+  .ctrl select, .ctrl input[type=url]{
     background:var(--panel-2);color:var(--paper);border:1px solid var(--hairline);
     border-radius:6px;padding:5px 8px;font-size:12.5px;max-width:200px;
   }
+  .ctrl input[type=url]{width:100%;max-width:100%;font-family:'IBM Plex Mono',monospace;}
+  .ctrl.stack{align-items:stretch;flex-direction:column;gap:7px;}
   .toggle-row{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;font-size:12.5px;color:var(--muted);}
   .toggle-row label{display:flex;align-items:center;gap:6px;cursor:pointer;}
   .toggle-row input{accent-color:var(--teal);}
@@ -220,13 +222,21 @@
           <summary style="cursor:pointer;color:var(--muted);font-size:11.5px;font-family:'IBM Plex Mono',monospace;">Browse all voices on this device</summary>
           <select id="voiceSelect" style="width:100%;margin-top:8px;"></select>
         </details>
+        <details id="backgroundAudioWrap" style="margin-top:-4px;">
+          <summary style="cursor:pointer;color:var(--muted);font-size:11.5px;font-family:'IBM Plex Mono',monospace;">Background audio setup</summary>
+          <div class="ctrl stack" style="margin-top:8px;">
+            <label>TTS endpoint</label>
+            <input type="url" id="ttsEndpointInput" placeholder="https://your-worker.example.workers.dev/tts">
+          </div>
+        </details>
         <div class="toggle-row">
           <label><input type="checkbox" id="skipRefs" checked> Skip references / notes / index</label>
           <label><input type="checkbox" id="skipFront" checked> Skip front matter</label>
         </div>
       </div>
 
-      <p class="hint" id="wakeHint">Tip: keep this page open while listening. Backread will try to stop the iPhone from auto-locking during playback.</p>
+      <audio id="ttsAudio" preload="auto" playsinline></audio>
+      <p class="hint" id="wakeHint">Tip: add the TTS endpoint from the worker to enable real audio that can continue from the iPhone lock screen.</p>
       <p class="hint" id="voiceQualityHint"></p>
     </div>
   </div>
@@ -248,6 +258,7 @@
   let bookKey = null;
   let utteranceInProgress = false; // Prevent double-advance on utterance end
   let activeSpeechId = 0; // Ignore stale/duplicate iOS speech callbacks
+  let activeAudioUrl = null;
 
   const el = id => document.getElementById(id);
   const statusEl = el('status');
@@ -265,6 +276,7 @@
       await window.storage.set('prefs', JSON.stringify({
         rate: parseFloat(rateSlider.value),
         voiceName: voiceSelect.value,
+        ttsEndpoint: ttsEndpointInput.value.trim(),
         skipRefs: skipRefs.checked,
         skipFront: skipFront.checked
       }));
@@ -277,6 +289,7 @@
       if(r && r.value){
         const p = JSON.parse(r.value);
         if(p.rate){ rateSlider.value = p.rate; rateVal.textContent = p.rate.toFixed(2)+'×'; }
+        if(p.ttsEndpoint) ttsEndpointInput.value = p.ttsEndpoint;
         if(typeof p.skipRefs === 'boolean') skipRefs.checked = p.skipRefs;
         if(typeof p.skipFront === 'boolean') skipFront.checked = p.skipFront;
         window.__preferredVoiceName = p.voiceName;
@@ -699,13 +712,92 @@
     return chap.sentences[curSentence] || null;
   }
 
+  function getTtsEndpoint(){
+    return (el('ttsEndpointInput')?.value || '').trim().replace(/\/+$/, '');
+  }
+
+  function stopGeneratedAudio(){
+    const audio = el('ttsAudio');
+    if(!audio) return;
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+    if(activeAudioUrl){
+      URL.revokeObjectURL(activeAudioUrl);
+      activeAudioUrl = null;
+    }
+  }
+
   function stopSpeech(){
     activeSpeechId++;
     speechSynthesis.cancel();
+    stopGeneratedAudio();
     utteranceInProgress = false;
   }
 
+  async function playGeneratedAudioCurrent(replaceExisting){
+    if(replaceExisting) stopSpeech();
+    const speechId = ++activeSpeechId;
+    let handled = false;
+    utteranceInProgress = true;
+    const text = currentSentenceText();
+    if(text == null){
+      utteranceInProgress = false;
+      advanceChapter(1, true);
+      return;
+    }
+
+    updateNowPlaying();
+    saveState();
+    const audio = el('ttsAudio');
+    try{
+      const res = await fetch(getTtsEndpoint(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          voice: voiceSelect.value,
+          rate: parseFloat(rateSlider.value)
+        })
+      });
+      if(!res.ok) throw new Error('TTS request failed with '+res.status);
+      const blob = await res.blob();
+      if(speechId !== activeSpeechId) return;
+      stopGeneratedAudio();
+      activeAudioUrl = URL.createObjectURL(blob);
+      audio.src = activeAudioUrl;
+      audio.playbackRate = parseFloat(rateSlider.value);
+      audio.onended = () => {
+        if(handled || speechId !== activeSpeechId) return;
+        handled = true;
+        utteranceInProgress = false;
+        if(isPlaying) stepSentence(1, true, false);
+      };
+      audio.onerror = () => {
+        if(handled || speechId !== activeSpeechId) return;
+        handled = true;
+        utteranceInProgress = false;
+        updateWakeHint('Generated audio failed. Check the TTS endpoint, then tap Play again.');
+      };
+      await audio.play();
+      updateWakeHint('Generated audio mode is active. iPhone lock-screen playback should continue like normal media.');
+    }catch(e){
+      if(speechId !== activeSpeechId) return;
+      utteranceInProgress = false;
+      updateWakeHint('Generated audio is unavailable, so Backread fell back to browser speech.');
+      speakBrowserCurrent(true, true);
+    }
+  }
+
   function speakCurrent(replaceExisting){
+    if(getTtsEndpoint()){
+      playGeneratedAudioCurrent(replaceExisting);
+      return;
+    }
+    return speakBrowserCurrent(replaceExisting, false);
+  }
+
+  function speakBrowserCurrent(replaceExisting, fromTtsFallback){
     if(replaceExisting) stopSpeech();
     const speechId = ++activeSpeechId;
     let handled = false;
@@ -734,6 +826,9 @@
     };
     speechSynthesis.speak(utt);
     updateNowPlaying();
+    if(!fromTtsFallback){
+      updateWakeHint('Browser speech mode is active. Add a TTS endpoint for lock-screen audio on iPhone.');
+    }
     saveState();
   }
 
@@ -743,7 +838,8 @@
     if(book.chapters[curChapter] && book.chapters[curChapter].skip){ advanceChapter(1, false); }
     isPlaying = true;
     el('playBtn').textContent = '❚❚';
-    requestWake();
+    if(getTtsEndpoint()) releaseWake();
+    else requestWake();
     speakCurrent(true);
   }
   function pause(){
@@ -955,6 +1051,7 @@
   const uploader = el('uploader');
   const rateSlider = el('rateSlider'), rateVal = el('rateVal');
   const voiceSelect = el('voiceSelect');
+  const ttsEndpointInput = el('ttsEndpointInput');
   const skipRefs = el('skipRefs'), skipFront = el('skipFront');
 
   ['dragenter','dragover'].forEach(ev => uploader.addEventListener(ev, e => { e.preventDefault(); uploader.classList.add('drag'); }));
@@ -1007,6 +1104,12 @@
     window.__preferredVoiceName = voiceSelect.value;
     syncSelectorsToVoice(voiceSelect.value);
     saveState();
+  });
+  ttsEndpointInput.addEventListener('change', () => {
+    saveState();
+    updateWakeHint(ttsEndpointInput.value.trim()
+      ? 'Generated audio mode is ready. Tap Play to use lock-screen audio.'
+      : 'Tip: add the TTS endpoint from the worker to enable real audio that can continue from the iPhone lock screen.');
   });
   skipRefs.addEventListener('change', () => { if(book) rebuildCurrentBookFiltering(); saveState(); });
   skipFront.addEventListener('change', () => { if(book){ book.chapters.forEach(c=>{}); reapplyFrontMatterSkip(); } saveState(); });
